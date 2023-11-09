@@ -1,11 +1,14 @@
 package map;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import utils.Subject;
 
 public class Minesweeper extends Subject {
-    private static final int WIDTH = 100;
-    private static final int HEIGHT = 50;
-    private static final int BOMB_CHANGE = 20;
+    private static final int WIDTH = 50;
+    private static final int HEIGHT = 25;
+    private static final int BOMB_CHANGE = 10;
 
     protected int width;
     protected int height;
@@ -13,11 +16,14 @@ public class Minesweeper extends Subject {
     protected Cell[][] cells;
     protected int currentRound;
 
+    private List<Vector2> marks;
+
     public Minesweeper(int width, int height){
         this.width = width;
         this.height = height;
         this.cells = new Cell[width][height];
         this.currentRound = 0;
+        this.marks = new ArrayList<>();
         init();
     }
 
@@ -58,12 +64,24 @@ public class Minesweeper extends Subject {
         return currentRound;
     }
 
+    public boolean isValidCoordinate(Vector2 v){
+        return isValidCoordinate(v.x, v.y);
+    }
+
     public boolean isValidCoordinate(int x, int y){
         return x >= 0 && y >= 0 && x < width && y < height;
     }
 
+    public Cell getCell(Vector2 v){
+        return getCell(v.x, v.y);
+    }
+
     public Cell getCell(int x, int y){
         return cells[x][y];
+    }
+
+    public List<Vector2> getMarks(){
+        return marks;
     }
 
     private static CellType randomCellType(){
@@ -75,23 +93,57 @@ public class Minesweeper extends Subject {
         return (int)(Math.random() * (100 + 1));
     }
 
-    public void explore(int x, int y){
-        if(!isValidCoordinate(x, y)) return;
-        Cell c = cells[x][y];
-        if(c.isNoBombAround()) exploreEmpty(x, y);
+    public void placeMark(Vector2 v){
+        Cell c = getCell(v);
+        if(c != null && !c.isExplored()){
+            if(!isMarked(v)) marks.add(v);
+            else removeMark(v);
+        }
+    }
+
+    public boolean isMarked(Vector2 v){
+        return marks.contains(v);
+    }
+
+    public boolean removeMark(Vector2 v){
+        return marks.remove(v);
+    }
+
+    public void explore(Vector2 v){
+        if(!isValidCoordinate(v)) return;
+        Cell c = getCell(v);
+        if(isMarked(v)) removeMark(v);
+        if(c.isNoBombAround()) exploreEmpty(v);
         else c.explored = true;
         ++currentRound;
         notifyObservers();
     }
 
     public void exploreEmpty(int x, int y){
-        if(!isValidCoordinate(x, y)) return;
-        Cell c = cells[x][y];
+        exploreEmpty(new Vector2(x, y));
+    }
+
+    public void exploreEmpty(Vector2 v){
+        if(!isValidCoordinate(v)) return;
+        Cell c = getCell(v);
         if(c.explored || !c.isNoBombAround()) return;
         c.explored = true;
-        exploreEmpty(x, y + 1);
-        exploreEmpty(x + 1, y);
-        exploreEmpty(x, y - 1);
-        exploreEmpty(x - 1, y);
+        exploreEmpty(v.x, v.y + 1);
+        exploreEmpty(v.x + 1, v.y);
+        exploreEmpty(v.x, v.y - 1);
+        exploreEmpty(v.x - 1, v.y);
+        exploreAround(v);
+    }
+
+    public void exploreAround(Vector2 v){
+        exploreAround(v.x, v.y + 1);
+        exploreAround(v.x + 1, v.y);
+        exploreAround(v.x, v.y - 1);
+        exploreAround(v.x - 1, v.y);
+    }
+
+    public void exploreAround(int x, int y){
+        if(!isValidCoordinate(x, y)) return;
+        getCell(x, y).explored = true;
     }
 }

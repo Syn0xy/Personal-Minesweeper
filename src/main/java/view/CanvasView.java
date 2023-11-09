@@ -27,10 +27,12 @@ public abstract class CanvasView extends Canvas implements Observer {
         });
         f.setVisible(true);
         f.setLocation(position());
+        view();
     }
 
     public abstract String title();
     public abstract Point position();
+    public abstract void view();
     
     public void update(Graphics g) {
         paint(g);

@@ -8,18 +8,15 @@ import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
+import javax.swing.JPanel;
+
 import map.Cell;
 import map.CellType;
 import map.Minesweeper;
 import map.Vector2;
 import utils.Subject;
 
-public class MinesweeperView extends CanvasView {
-    private static final int WIDTH = (int)(SCREEN_WIDTH * (2.0 / 3.0));
-    private static final int HEIGHT = (int)(SCREEN_HEIGHT * (2.0 / 3.0));
-
-    private static final String TITLE = "Demineur";
-
+public class GameCanvas extends JPanel {
     private static final Color BACKGROUND_COLOR = Color.BLACK;
     private static final Color UNEXPLORED_COLOR = Color.GRAY;
     private static final Color BOMB_COLOR = Color.RED;
@@ -35,30 +32,11 @@ public class MinesweeperView extends CanvasView {
 
     private Vector2 selected;
 
-    public MinesweeperView(Minesweeper map, int width, int height){
-        super(width, height);
-        this.minesweeper = map;
+    public GameCanvas(Minesweeper minesweeper){
+        this.minesweeper = minesweeper;
         this.selected = new Vector2();
-        this.minesweeper.attach(this);
-        repaint();
-    }
-
-    public MinesweeperView(Minesweeper map){
-        this(map, WIDTH, HEIGHT);
-    }
-
-    @Override
-    public String title() {
-        return TITLE;
-    }
-
-    @Override
-    public Point position() {
-        return center();
-    }
-    
-    @Override
-    public void view(){
+        add(new GameUI());
+        
         MouseAdapter adapter = new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -83,9 +61,14 @@ public class MinesweeperView extends CanvasView {
     
     @Override
     public void paint(Graphics g) {
-        if(minesweeper == null) return;
-        setBackground(BACKGROUND_COLOR);
+        super.paint(g);
+        clearScreen(g);
         draw(g);
+    }
+
+    public void clearScreen(Graphics g){
+        g.setColor(BACKGROUND_COLOR);
+        g.fillRect(0, 0, getWidth(), getHeight());
     }
 
     private void draw(Graphics g){
@@ -155,15 +138,5 @@ public class MinesweeperView extends CanvasView {
             case BOMB: return BOMB_COLOR;
         }
         return null;
-    }
-
-    @Override
-    public void update(Subject subj) {
-        repaint();
-    }
-
-    @Override
-    public void update(Subject subj, Object data) {
-        repaint();
     }
 }

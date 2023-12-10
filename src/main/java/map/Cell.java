@@ -14,6 +14,10 @@ public class Cell {
         return type;
     }
 
+    public boolean isBomb(){
+        return type == CellType.BOMB;
+    }
+
     public int bombAround(){
         return bombAround;
     }
@@ -24,9 +28,5 @@ public class Cell {
 
     public boolean isNoBombAround(){
         return bombAround == 0;
-    }
-
-    public boolean isBomb(){
-        return type == CellType.BOMB;
     }
 }

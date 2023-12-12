@@ -4,21 +4,24 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
-import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+import javax.swing.JPanel;
 
 import map.Cell;
-import map.CellType;
 import map.Minesweeper;
 import map.Vector2;
-import utils.Subject;
 
-public class MinesweeperView extends CanvasView {
-    private static final int WIDTH = (int)(SCREEN_WIDTH * (2.0 / 3.0));
-    private static final int HEIGHT = (int)(SCREEN_HEIGHT * (2.0 / 3.0));
-
-    private static final String TITLE = "Demineur";
+public class GameCanvas extends JPanel {
+    private static final String SP = File.separator;
+    private static final String CELL_EMPTY_IMAGE_FILENAME = "." + SP + "res" + SP + "empty.png";
+    private static final String CELL_UNEXPLORED_IMAGE_FILENAME = "." + SP + "res" + SP + "cell.png";
+    private static final String CELL_BOMB_IMAGE_FILENAME = "." + SP + "res" + SP + "mine.png";
 
     private static final Color BACKGROUND_COLOR = Color.BLACK;
     private static final Color UNEXPLORED_COLOR = Color.GRAY;
@@ -26,6 +29,7 @@ public class MinesweeperView extends CanvasView {
     private static final Color EMPTY_COLOR = Color.BLUE;
     private static final Color SELECTED_COLOR = Color.WHITE;
     private static final Color MARKED_COLOR = Color.CYAN;
+    private static final Color NUMBER_COLOR = Color.BLACK;
     private static final int CELL_SIZE = 32;
 
     private static final int LEFT_MOUSE_CLICK = 1;
@@ -33,32 +37,18 @@ public class MinesweeperView extends CanvasView {
 
     private Minesweeper minesweeper;
 
+    private BufferedImage cellEmptyImage;
+    private BufferedImage cellUnexploredImage;
+    private BufferedImage cellBombImage;
     private Vector2 selected;
 
-    public MinesweeperView(Minesweeper map, int width, int height){
-        super(width, height);
-        this.minesweeper = map;
+    public GameCanvas(Minesweeper minesweeper){
+        this.minesweeper = minesweeper;
         this.selected = new Vector2();
-        this.minesweeper.attach(this);
-        repaint();
+        init();
     }
 
-    public MinesweeperView(Minesweeper map){
-        this(map, WIDTH, HEIGHT);
-    }
-
-    @Override
-    public String title() {
-        return TITLE;
-    }
-
-    @Override
-    public Point position() {
-        return center();
-    }
-    
-    @Override
-    public void view(){
+    public void init(){
         MouseAdapter adapter = new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -79,16 +69,24 @@ public class MinesweeperView extends CanvasView {
 
         addMouseListener(adapter);
         addMouseMotionListener(adapter);
+
+        try {
+            cellEmptyImage = ImageIO.read(new File(CELL_EMPTY_IMAGE_FILENAME));
+            cellUnexploredImage = ImageIO.read(new File(CELL_UNEXPLORED_IMAGE_FILENAME));
+            cellBombImage = ImageIO.read(new File(CELL_BOMB_IMAGE_FILENAME));
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
     }
     
     @Override
     public void paint(Graphics g) {
-        if(minesweeper == null) return;
+        System.out.println("test");
         setBackground(BACKGROUND_COLOR);
-        draw(g);
+        drawCases(g);
     }
 
-    private void draw(Graphics g){
+    private void drawCases(Graphics g){
         for (int y = 0; y < minesweeper.getHeight(); y++) {
             for (int x = 0; x < minesweeper.getWidth(); x++) {
                 drawCell(g, x, y);
@@ -102,13 +100,20 @@ public class MinesweeperView extends CanvasView {
         Cell c = minesweeper.getCell(x, y);
         int px = x * CELL_SIZE;
         int py = y * CELL_SIZE;
-        drawCell(g, getCellColor(c), px, py);
+        drawCell(g, c, px, py);
         if(c.isExplored() && !c.isBomb() && !c.isNoBombAround()) drawCellNumber(g, c, px, py);
     }
 
-    private void drawCell(Graphics g, Color color, int x, int y){
-        g.setColor(color);
-        g.fillRect(x, y, CELL_SIZE, CELL_SIZE);
+    private void drawCell(Graphics g, Cell c, int x, int y){
+        BufferedImage image = null;
+        switch (c.getType()) {
+            case EMPTY:
+                if(c.isExplored()) image = cellEmptyImage;
+                else image = cellUnexploredImage;
+                break;
+            case BOMB: image = cellBombImage; break;
+        }
+        g.drawImage(image, x, y, CELL_SIZE, CELL_SIZE, null);
     }
     
     private void drawSelected(Graphics g){
@@ -117,7 +122,8 @@ public class MinesweeperView extends CanvasView {
         if(c.isExplored()) return;
         int px = selected.x * CELL_SIZE;
         int py = selected.y * CELL_SIZE;
-        drawCell(g, SELECTED_COLOR, px, py);
+        g.setColor(SELECTED_COLOR);
+        g.fillRect(px, py, CELL_SIZE, CELL_SIZE);
     }
 
     private void drawMarks(Graphics g){
@@ -131,7 +137,7 @@ public class MinesweeperView extends CanvasView {
     }
     
     private void drawCellNumber(Graphics g, Cell c, int px, int py){
-        g.setColor(Color.WHITE);
+        g.setColor(NUMBER_COLOR);
         drawCenteredString(g, String.valueOf(c.bombAround()), px + CELL_SIZE / 2, py + CELL_SIZE / 2);
     }
     
@@ -144,26 +150,16 @@ public class MinesweeperView extends CanvasView {
         g.drawString(s, x - size / 2, y - size / 2);
     }
 
-    private Color getCellColor(Cell c){
-        if(c.isExplored()) return getCellTypeColor(c.getType());
-        return UNEXPLORED_COLOR;
-    }
+    // private Color getCellColor(Cell c){
+    //     if(c.isExplored()) return getCellTypeColor(c.getType());
+    //     return UNEXPLORED_COLOR;
+    // }
 
-    private Color getCellTypeColor(CellType type){
-        switch (type) {
-            case EMPTY: return EMPTY_COLOR;
-            case BOMB: return BOMB_COLOR;
-        }
-        return null;
-    }
-
-    @Override
-    public void update(Subject subj) {
-        repaint();
-    }
-
-    @Override
-    public void update(Subject subj, Object data) {
-        repaint();
-    }
+    // private Color getCellTypeColor(CellType type){
+    //     switch (type) {
+    //         case EMPTY: return EMPTY_COLOR;
+    //         case BOMB: return BOMB_COLOR;
+    //     }
+    //     return null;
+    // }
 }

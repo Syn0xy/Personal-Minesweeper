@@ -25,7 +25,7 @@ public class GameView extends View implements Observer {
 
     @Override
     public String title() {
-        return TITLE;
+        return TITLE + " (" + minesweeper.getWidth() + "x" + minesweeper.getHeight() + ")";
     }
 
     @Override
@@ -47,4 +47,5 @@ public class GameView extends View implements Observer {
     public void update(Subject subj, Object data) {
         repaint();
     }
+
 }

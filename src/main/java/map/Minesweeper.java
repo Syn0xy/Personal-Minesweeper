@@ -114,7 +114,7 @@ public class Minesweeper extends Subject {
         Cell c = getCell(v);
         if(isMarked(v)) removeMark(v);
         if(c.isNoBombAround()) exploreEmpty(v);
-        else c.explored = true;
+        else exploreCell(v);
         ++currentRound;
         notifyObservers();
     }
@@ -127,7 +127,7 @@ public class Minesweeper extends Subject {
         if(!isValidCoordinate(v)) return;
         Cell c = getCell(v);
         if(c.explored || !c.isNoBombAround()) return;
-        c.explored = true;
+        exploreCell(v);
         exploreEmpty(v.x, v.y + 1);
         exploreEmpty(v.x + 1, v.y);
         exploreEmpty(v.x, v.y - 1);
@@ -143,7 +143,15 @@ public class Minesweeper extends Subject {
     }
 
     public void exploreAround(int x, int y){
-        if(!isValidCoordinate(x, y)) return;
-        getCell(x, y).explored = true;
+        Vector2 v = new Vector2(x, y);
+        if(!isValidCoordinate(v)) return;
+        exploreCell(v);
+    }
+
+    public void exploreCell(Vector2 v){
+        Cell c = getCell(v);
+        if(c == null) return;
+        c.explored = true;
+        if(isMarked(v)) removeMark(v);
     }
 }

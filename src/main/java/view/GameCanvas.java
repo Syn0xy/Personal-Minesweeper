@@ -24,9 +24,6 @@ public class GameCanvas extends JPanel {
     private static final String CELL_BOMB_IMAGE_FILENAME = "." + SP + "res" + SP + "mine.png";
 
     private static final Color BACKGROUND_COLOR = Color.BLACK;
-    private static final Color UNEXPLORED_COLOR = Color.GRAY;
-    private static final Color BOMB_COLOR = Color.RED;
-    private static final Color EMPTY_COLOR = Color.BLUE;
     private static final Color SELECTED_COLOR = Color.WHITE;
     private static final Color MARKED_COLOR = Color.CYAN;
     private static final Color NUMBER_COLOR = Color.BLACK;
@@ -81,12 +78,17 @@ public class GameCanvas extends JPanel {
     
     @Override
     public void paint(Graphics g) {
-        System.out.println("test");
-        setBackground(BACKGROUND_COLOR);
-        drawCases(g);
+        super.paint(g);
+        clearScreen(g);
+        draw(g);
     }
 
-    private void drawCases(Graphics g){
+    public void clearScreen(Graphics g){
+        g.setColor(BACKGROUND_COLOR);
+        g.fillRect(0, 0, getWidth(), getHeight());
+    }
+
+    private void draw(Graphics g){
         for (int y = 0; y < minesweeper.getHeight(); y++) {
             for (int x = 0; x < minesweeper.getWidth(); x++) {
                 drawCell(g, x, y);
@@ -149,17 +151,4 @@ public class GameCanvas extends JPanel {
         y = y + ((size - metrics.getHeight()) / 2) + metrics.getAscent();
         g.drawString(s, x - size / 2, y - size / 2);
     }
-
-    // private Color getCellColor(Cell c){
-    //     if(c.isExplored()) return getCellTypeColor(c.getType());
-    //     return UNEXPLORED_COLOR;
-    // }
-
-    // private Color getCellTypeColor(CellType type){
-    //     switch (type) {
-    //         case EMPTY: return EMPTY_COLOR;
-    //         case BOMB: return BOMB_COLOR;
-    //     }
-    //     return null;
-    // }
 }
